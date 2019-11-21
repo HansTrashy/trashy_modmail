@@ -1,0 +1,16 @@
+[package]
+name = "trashy_modmail"
+version = "0.1.0"
+authors = ["Denis Richartz <denisrichartz92@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+log = "*"
+dotenv = "*"
+
+[dependencies.serenity]
+default-features = false
+features = ["builder", "cache", "client", "framework", "gateway", "http", "model", "standard_framework", "utils", "default_native_tls"]
+version = "0.7"
