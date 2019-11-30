@@ -1,4 +1,3 @@
-use crate::ShardManagerContainer;
 use serenity::framework::standard::{macros::command, Args, CommandResult};
 use serenity::model::prelude::*;
 use serenity::prelude::*;
@@ -16,13 +15,7 @@ pub fn reply(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 }
 
 #[command]
-#[description = ""]
-pub fn archive(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
-    Ok(())
-}
-
-#[command]
-#[description = ""]
+#[description = "Delete the channel"]
 pub fn close(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     Ok(())
 }
