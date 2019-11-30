@@ -1,4 +1,4 @@
-use super::{MODMAIL_ARCHIVE, MODMAIL_CATEGORY, MODMAIL_SERVER, MOD_ROLE};
+use super::{MODMAIL_CATEGORY, MODMAIL_SERVER, MOD_ROLE, SELF_ID};
 use crate::storage::Storage;
 use log::*;
 use serenity::{
@@ -7,7 +7,6 @@ use serenity::{
         event::ResumedEvent,
         gateway::Ready,
         id::ChannelId,
-        id::GuildId,
     },
     prelude::*,
     utils::MessageBuilder,
@@ -25,7 +24,7 @@ impl EventHandler for Handler {
     }
 
     fn message(&self, ctx: Context, msg: Message) {
-        if !msg.is_private() {
+        if !msg.is_private() || msg.author.id == *SELF_ID {
             return;
         }
         let data = ctx.data.read();
@@ -44,6 +43,7 @@ impl EventHandler for Handler {
             // modmail channel exists
             Some(c) => {
                 let channel_id = ChannelId(*c);
+
                 let _ = channel_id.send_message(&ctx, |m| {
                     m.embed(|e| {
                         e.author(|a| {
@@ -61,7 +61,7 @@ impl EventHandler for Handler {
                     .create_channel(&ctx, |c| {
                         c.name(format!("{}-{}", msg.author.name, msg.author.discriminator))
                             .kind(ChannelType::Text)
-                            .category(MODMAIL_CATEGORY)
+                            .category(&*MODMAIL_CATEGORY)
                     })
                     .expect("Could not create modmail channel");
 
@@ -70,7 +70,7 @@ impl EventHandler for Handler {
                 let _ = modmail_channel.send_message(&ctx, |m| {
                     m.content(
                         MessageBuilder::new()
-                            .mention(&MOD_ROLE)
+                            .mention(&*MOD_ROLE)
                             .push(" ")
                             .mention(&msg.author)
                             .push(" has started a modmail session!")

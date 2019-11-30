@@ -4,20 +4,30 @@ mod storage;
 
 use commands::*;
 use dotenv::dotenv;
-use log::{error, info};
+use lazy_static::lazy_static;
+use log::*;
 use serenity::{
     client::bridge::gateway::ShardManager,
     framework::{standard::macros::group, StandardFramework},
-    model::{event::ResumedEvent, gateway::Ready, id::ChannelId, id::GuildId, id::RoleId},
+    model::{id::ChannelId, id::GuildId, id::RoleId, id::UserId},
     prelude::*,
 };
 use std::{collections::HashSet, env, sync::Arc};
 use storage::Storage;
 
-const MODMAIL_SERVER: GuildId = GuildId(553329127705411614);
-const MODMAIL_CATEGORY: ChannelId = ChannelId(650325086838194177);
-const MOD_ROLE: RoleId = RoleId(562248175646146571);
-const MODMAIL_ARCHIVE: ChannelId = ChannelId(0);
+fn load_env(name: &str) -> u64 {
+    env::var(name)
+        .expect("missing env var")
+        .parse::<u64>()
+        .expect("env var is not valid u64")
+}
+
+lazy_static! {
+    static ref SELF_ID: UserId = UserId(load_env("SELF_ID"));
+    static ref MODMAIL_SERVER: GuildId = GuildId(load_env("MODMAIL_SERVER"));
+    static ref MODMAIL_CATEGORY: ChannelId = ChannelId(load_env("MODMAIL_CATEGORY"));
+    static ref MOD_ROLE: RoleId = RoleId(load_env("MOD_ROLE"));
+}
 
 struct ShardManagerContainer;
 

@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 log = "*"
 dotenv = "*"
+lazy_static = "*"
 
 [dependencies.serenity]
 default-features = false
