@@ -35,7 +35,7 @@ impl EventHandler for Handler {
                     &ctx,
                     "Could not retrieve the needed Storage, please inform Staff",
                 );
-                panic!("could not retrieve storage");
+                return;
             }
         };
 

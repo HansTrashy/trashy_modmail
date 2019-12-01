@@ -42,7 +42,7 @@ impl TypeMapKey for Storage {
 group!({
     name: "general",
     options: {},
-    commands: [start_modmail, reply, close]
+    commands: [init, reply, close]
 });
 
 fn main() {
