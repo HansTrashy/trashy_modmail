@@ -3,7 +3,7 @@ use crate::storage::Storage;
 use log::*;
 use serenity::{
     model::{
-        channel::{ChannelType, Message},
+        channel::{Attachment, ChannelType, Message},
         event::ResumedEvent,
         gateway::Ready,
         id::ChannelId,
@@ -46,12 +46,26 @@ impl EventHandler for Handler {
 
                 let _ = channel_id.send_message(&ctx, |m| {
                     m.embed(|e| {
-                        e.author(|a| {
-                            a.name(msg.author.name.clone())
-                                .icon_url(msg.author.static_avatar_url().unwrap_or_default())
-                        })
-                        .color((200, 100, 100))
-                        .description(msg.content_safe(&ctx))
+                        let mut embed = e
+                            .author(|a| {
+                                a.name(msg.author.name.clone())
+                                    .icon_url(msg.author.static_avatar_url().unwrap_or_default())
+                            })
+                            .color((200, 100, 100))
+                            .description(msg.content_safe(&ctx));
+
+                        if let Some(image) = msg
+                            .attachments
+                            .iter()
+                            .cloned()
+                            .filter(|a| a.width.is_some())
+                            .collect::<Vec<Attachment>>()
+                            .first()
+                        {
+                            embed = embed.image(&image.url);
+                        }
+
+                        embed
                     })
                 });
             }
@@ -80,12 +94,26 @@ impl EventHandler for Handler {
 
                 let _ = modmail_channel.send_message(&ctx, |m| {
                     m.embed(|e| {
-                        e.author(|a| {
-                            a.name(msg.author.name.clone())
-                                .icon_url(msg.author.static_avatar_url().unwrap_or_default())
-                        })
-                        .color((200, 100, 100))
-                        .description(msg.content_safe(&ctx))
+                        let mut embed = e
+                            .author(|a| {
+                                a.name(msg.author.name.clone())
+                                    .icon_url(msg.author.static_avatar_url().unwrap_or_default())
+                            })
+                            .color((200, 100, 100))
+                            .description(msg.content_safe(&ctx));
+
+                        if let Some(image) = msg
+                            .attachments
+                            .iter()
+                            .cloned()
+                            .filter(|a| a.width.is_some())
+                            .collect::<Vec<Attachment>>()
+                            .first()
+                        {
+                            embed = embed.image(&image.url);
+                        }
+
+                        embed
                     })
                 });
             }
