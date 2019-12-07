@@ -44,30 +44,7 @@ impl EventHandler for Handler {
             Some(c) => {
                 let channel_id = ChannelId(*c);
 
-                let _ = channel_id.send_message(&ctx, |m| {
-                    m.embed(|e| {
-                        let mut embed = e
-                            .author(|a| {
-                                a.name(msg.author.name.clone())
-                                    .icon_url(msg.author.static_avatar_url().unwrap_or_default())
-                            })
-                            .color((200, 100, 100))
-                            .description(msg.content_safe(&ctx));
-
-                        if let Some(image) = msg
-                            .attachments
-                            .iter()
-                            .cloned()
-                            .filter(|a| a.width.is_some())
-                            .collect::<Vec<Attachment>>()
-                            .first()
-                        {
-                            embed = embed.image(&image.url);
-                        }
-
-                        embed
-                    })
-                });
+                let _ = channel_id.send_message(&ctx, |m| m.embed(|e| build_embed(e, &msg, &ctx)));
             }
             // modmail channel does not exist
             None => {
@@ -92,31 +69,36 @@ impl EventHandler for Handler {
                     )
                 });
 
-                let _ = modmail_channel.send_message(&ctx, |m| {
-                    m.embed(|e| {
-                        let mut embed = e
-                            .author(|a| {
-                                a.name(msg.author.name.clone())
-                                    .icon_url(msg.author.static_avatar_url().unwrap_or_default())
-                            })
-                            .color((200, 100, 100))
-                            .description(msg.content_safe(&ctx));
-
-                        if let Some(image) = msg
-                            .attachments
-                            .iter()
-                            .cloned()
-                            .filter(|a| a.width.is_some())
-                            .collect::<Vec<Attachment>>()
-                            .first()
-                        {
-                            embed = embed.image(&image.url);
-                        }
-
-                        embed
-                    })
-                });
+                let _ =
+                    modmail_channel.send_message(&ctx, |m| m.embed(|e| build_embed(e, &msg, &ctx)));
             }
         }
     }
+}
+
+fn build_embed<'a>(
+    e: &'a mut serenity::builder::CreateEmbed,
+    msg: &Message,
+    ctx: &Context,
+) -> &'a mut serenity::builder::CreateEmbed {
+    let mut embed = e
+        .author(|a| {
+            a.name(msg.author.name.clone())
+                .icon_url(msg.author.static_avatar_url().unwrap_or_default())
+        })
+        .color((200, 100, 100))
+        .description(msg.content_safe(&ctx));
+
+    if let Some(image) = msg
+        .attachments
+        .iter()
+        .cloned()
+        .filter(|a| a.width.is_some())
+        .collect::<Vec<Attachment>>()
+        .first()
+    {
+        embed = embed.image(&image.url);
+    }
+
+    embed
 }
