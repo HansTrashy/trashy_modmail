@@ -27,6 +27,7 @@ lazy_static! {
     static ref MODMAIL_SERVER: GuildId = GuildId(load_env("MODMAIL_SERVER"));
     static ref MODMAIL_CATEGORY: ChannelId = ChannelId(load_env("MODMAIL_CATEGORY"));
     static ref MOD_ROLE: RoleId = RoleId(load_env("MOD_ROLE"));
+    static ref MODMAIL_STORAGE: String = env::var("MODMAIL_STORAGE").expect("missing env var");
 }
 
 struct ShardManagerContainer;
@@ -47,6 +48,7 @@ group!({
 
 fn main() {
     dotenv().ok();
+    env_logger::init();
 
     let token = env::var("DISCORD_TOKEN").expect("No DISCORD_TOKEN found in environment");
 
@@ -55,7 +57,9 @@ fn main() {
     {
         let mut data = client.data.write();
         data.insert::<ShardManagerContainer>(Arc::clone(&client.shard_manager));
-        data.insert::<Storage>(Arc::new(Mutex::new(Storage::new())));
+        data.insert::<Storage>(Arc::new(Mutex::new(Storage::load_or_default(
+            &MODMAIL_STORAGE,
+        ))));
     }
 
     let owners = match client.cache_and_http.http.get_current_application_info() {
