@@ -82,7 +82,7 @@ pub fn reply(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 
     let user_channel = user.create_dm_channel(&ctx)?;
 
-    let _ = user_channel.send_message(&ctx, |m| {
+    let result = user_channel.send_message(&ctx, |m| {
         m.embed(|e| {
             e.author(|a| {
                 a.name(msg.author.name.clone())
@@ -92,6 +92,15 @@ pub fn reply(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
             .color((50, 100, 200))
         })
     });
+
+    match result {
+        Ok(_) => {
+            let _ = msg.react(&ctx, ReactionType::Unicode("✅".to_string()));
+        }
+        Err(e) => {
+            let _ = msg.react(&ctx, ReactionType::Unicode("❎".to_string()));
+        }
+    }
 
     Ok(())
 }

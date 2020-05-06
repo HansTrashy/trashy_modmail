@@ -3,7 +3,7 @@ use crate::storage::Storage;
 use log::*;
 use serenity::{
     model::{
-        channel::{Attachment, ChannelType, Message},
+        channel::{Attachment, ChannelType, Message, ReactionType},
         event::ResumedEvent,
         gateway::Ready,
         id::ChannelId,
@@ -44,7 +44,17 @@ impl EventHandler for Handler {
             Some(c) => {
                 let channel_id = ChannelId(*c);
 
-                let _ = channel_id.send_message(&ctx, |m| m.embed(|e| build_embed(e, &msg, &ctx)));
+                let result =
+                    channel_id.send_message(&ctx, |m| m.embed(|e| build_embed(e, &msg, &ctx)));
+
+                match result {
+                    Ok(_) => {
+                        let _ = msg.react(&ctx, ReactionType::Unicode("✅".to_string()));
+                    }
+                    Err(e) => {
+                        let _ = msg.react(&ctx, ReactionType::Unicode("❎".to_string()));
+                    }
+                }
             }
             // modmail channel does not exist
             None => {
@@ -69,8 +79,17 @@ impl EventHandler for Handler {
                     )
                 });
 
-                let _ =
+                let result =
                     modmail_channel.send_message(&ctx, |m| m.embed(|e| build_embed(e, &msg, &ctx)));
+
+                match result {
+                    Ok(_) => {
+                        let _ = msg.react(&ctx, ReactionType::Unicode("✅".to_string()));
+                    }
+                    Err(e) => {
+                        let _ = msg.react(&ctx, ReactionType::Unicode("❎".to_string()));
+                    }
+                }
             }
         }
     }
