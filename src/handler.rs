@@ -1,7 +1,7 @@
 use super::{MODMAIL_CATEGORY, MODMAIL_SERVER, MOD_ROLE, SELF_ID};
 use crate::storage::Storage;
-use log::*;
 use serenity::{
+    async_trait,
     model::{
         channel::{Attachment, ChannelType, Message, ReactionType},
         event::ResumedEvent,
@@ -11,25 +11,27 @@ use serenity::{
     prelude::*,
     utils::MessageBuilder,
 };
+use tracing::*;
 
 pub struct Handler;
 
+#[async_trait]
 impl EventHandler for Handler {
-    fn ready(&self, _: Context, ready: Ready) {
+    async fn ready(&self, _: Context, ready: Ready) {
         info!("Connected as {}", ready.user.name);
     }
 
-    fn resume(&self, _: Context, _: ResumedEvent) {
+    async fn resume(&self, _: Context, _: ResumedEvent) {
         info!("Resumed");
     }
 
-    fn message(&self, ctx: Context, msg: Message) {
+    async fn message(&self, ctx: Context, msg: Message) {
         if !msg.is_private() || msg.author.id == *SELF_ID {
             return;
         }
-        let data = ctx.data.read();
+        let data = ctx.data.read().await;
         let mut storage = match data.get::<Storage>() {
-            Some(v) => v.lock(),
+            Some(v) => v.lock().await,
             None => {
                 let _ = msg.reply(
                     &ctx,
@@ -44,8 +46,28 @@ impl EventHandler for Handler {
             Some(c) => {
                 let channel_id = ChannelId(*c);
 
-                let result =
-                    channel_id.send_message(&ctx, |m| m.embed(|e| build_embed(e, &msg, &ctx)));
+                let image = msg
+                    .attachments
+                    .iter()
+                    .cloned()
+                    .filter(|a| a.width.is_some())
+                    .collect::<Vec<Attachment>>()
+                    .first()
+                    .map(|a| a.url.to_string());
+
+                let result = channel_id
+                    .send_message(&ctx, |m| {
+                        m.embed(|e| {
+                            build_embed(
+                                e,
+                                &msg.author.name,
+                                &msg.author.avatar_url().unwrap_or_default(),
+                                &msg.content,
+                                image,
+                            )
+                        })
+                    })
+                    .await;
 
                 match result {
                     Ok(_) => {
@@ -64,6 +86,7 @@ impl EventHandler for Handler {
                             .kind(ChannelType::Text)
                             .category(&*MODMAIL_CATEGORY)
                     })
+                    .await
                     .expect("Could not create modmail channel");
 
                 storage.insert_user_channel(*msg.author.id.as_u64(), *modmail_channel.id.as_u64());
@@ -79,8 +102,28 @@ impl EventHandler for Handler {
                     )
                 });
 
-                let result =
-                    modmail_channel.send_message(&ctx, |m| m.embed(|e| build_embed(e, &msg, &ctx)));
+                let image = msg
+                    .attachments
+                    .iter()
+                    .cloned()
+                    .filter(|a| a.width.is_some())
+                    .collect::<Vec<Attachment>>()
+                    .first()
+                    .map(|a| a.url.to_string());
+
+                let result = modmail_channel
+                    .send_message(&ctx, |m| {
+                        m.embed(|e| {
+                            build_embed(
+                                e,
+                                &msg.author.name,
+                                &msg.author.avatar_url().unwrap_or_default(),
+                                &msg.content,
+                                image,
+                            )
+                        })
+                    })
+                    .await;
 
                 match result {
                     Ok(_) => {
@@ -97,26 +140,18 @@ impl EventHandler for Handler {
 
 fn build_embed<'a>(
     e: &'a mut serenity::builder::CreateEmbed,
-    msg: &Message,
-    ctx: &Context,
+    author: &str,
+    avatar_url: &str,
+    content: &str,
+    image: Option<String>,
 ) -> &'a mut serenity::builder::CreateEmbed {
     let mut embed = e
-        .author(|a| {
-            a.name(msg.author.name.clone())
-                .icon_url(msg.author.static_avatar_url().unwrap_or_default())
-        })
+        .author(|a| a.name(author).icon_url(avatar_url))
         .color((200, 100, 100))
-        .description(msg.content_safe(&ctx));
+        .description(content);
 
-    if let Some(image) = msg
-        .attachments
-        .iter()
-        .cloned()
-        .filter(|a| a.width.is_some())
-        .collect::<Vec<Attachment>>()
-        .first()
-    {
-        embed = embed.image(&image.url);
+    if let Some(image) = image {
+        embed = embed.image(&image);
     }
 
     embed

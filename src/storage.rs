@@ -1,8 +1,8 @@
 use crate::MODMAIL_STORAGE;
-use log::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
+use tracing::*;
 
 #[derive(Serialize, Deserialize)]
 pub struct Storage {

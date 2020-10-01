@@ -5,15 +5,29 @@ mod storage;
 use commands::*;
 use dotenv::dotenv;
 use lazy_static::lazy_static;
-use log::*;
+use serenity::prelude::*;
 use serenity::{
-    client::bridge::gateway::ShardManager,
-    framework::{standard::macros::group, StandardFramework},
-    model::{id::ChannelId, id::GuildId, id::RoleId, id::UserId},
-    prelude::*,
+    async_trait,
+    client::bridge::gateway::{ShardId, ShardManager},
+    framework::standard::{
+        help_commands,
+        macros::{check, command, group, help, hook},
+        Args, CheckResult, CommandGroup, CommandOptions, CommandResult, DispatchError, HelpOptions,
+        StandardFramework,
+    },
+    http::Http,
+    model::{
+        channel::{Channel, Message},
+        gateway::Ready,
+        id::{ChannelId, GuildId, RoleId, UserId},
+        permissions::Permissions,
+    },
+    utils::{content_safe, ContentSafeOptions},
 };
 use std::{collections::HashSet, env, sync::Arc};
 use storage::Storage;
+use tokio::sync::Mutex;
+use tracing::*;
 
 fn load_env(name: &str) -> u64 {
     env::var(name)
@@ -40,45 +54,65 @@ impl TypeMapKey for Storage {
     type Value = Arc<Mutex<Storage>>;
 }
 
-group!({
-    name: "general",
-    options: {},
-    commands: [init, reply, close]
-});
+#[group]
+#[commands(init, reply, close)]
+struct General;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     dotenv().ok();
-    env_logger::init();
+    tracing_subscriber::fmt().with_env_filter("info").init();
 
     let token = env::var("DISCORD_TOKEN").expect("No DISCORD_TOKEN found in environment");
 
-    let mut client = Client::new(&token, handler::Handler).expect("Could not create client");
+    let http = Http::new_with_token(&token);
+
+    let (owners, bot_id) = match http.get_current_application_info().await {
+        Ok(info) => {
+            let mut owners = HashSet::new();
+            if let Some(team) = info.team {
+                owners.insert(team.owner_user_id);
+            } else {
+                owners.insert(info.owner.id);
+            }
+            match http.get_current_user().await {
+                Ok(bot_id) => (owners, bot_id.id),
+                Err(why) => panic!("Could not access the bot id: {:?}", why),
+            }
+        }
+        Err(why) => panic!("Could not access application info: {:?}", why),
+    };
+
+    let framework = StandardFramework::new()
+        .configure(|c| {
+            c.with_whitespace(true)
+                .on_mention(Some(bot_id))
+                .prefix("~")
+                // In this case, if "," would be first, a message would never
+                // be delimited at ", ", forcing you to trim your arguments if you
+                // want to avoid whitespaces at the start of each.
+                .delimiter(" ")
+                // Sets the bot's owners. These will be used for commands that
+                // are owners only.
+                .owners(owners)
+        })
+        .group(&GENERAL_GROUP);
+
+    let mut client = Client::new(&token)
+        .event_handler(handler::Handler)
+        .framework(framework)
+        .await
+        .expect("Err creating client");
 
     {
-        let mut data = client.data.write();
+        let mut data = client.data.write().await;
         data.insert::<ShardManagerContainer>(Arc::clone(&client.shard_manager));
         data.insert::<Storage>(Arc::new(Mutex::new(Storage::load_or_default(
             &MODMAIL_STORAGE,
         ))));
     }
 
-    let owners = match client.cache_and_http.http.get_current_application_info() {
-        Ok(info) => {
-            let mut set = HashSet::new();
-            set.insert(info.owner.id);
-
-            set
-        }
-        Err(why) => panic!("Could not get application info: {:?}", why),
-    };
-
-    client.with_framework(
-        StandardFramework::new()
-            .configure(|c| c.owners(owners).prefix("~"))
-            .group(&GENERAL_GROUP),
-    );
-
-    if let Err(why) = client.start() {
+    if let Err(why) = client.start().await {
         error!("Client error: {:?}", why);
     }
 }
