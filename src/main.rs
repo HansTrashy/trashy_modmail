@@ -55,7 +55,7 @@ impl TypeMapKey for Storage {
 }
 
 #[group]
-#[commands(init, reply, close)]
+#[commands(init, reply, close, silentclose)]
 struct General;
 
 #[tokio::main]

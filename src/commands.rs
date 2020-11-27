@@ -157,3 +157,32 @@ pub async fn close(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
 
     Ok(())
 }
+
+#[command]
+#[description = "Delete the channel without notifying the user"]
+pub async fn silentclose(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
+    let data = ctx.data.read().await;
+    let mut storage = match data.get::<Storage>() {
+        Some(v) => v.lock().await,
+        None => {
+            msg.reply(
+                &ctx,
+                "Could not retrieve the needed Storage, please inform Staff",
+            )
+            .await?;
+            return Err("could not retrieve storage".into());
+        }
+    };
+
+    let modmail_user = storage.get_user(msg.channel_id.as_u64());
+
+    if modmail_user.is_none() {
+        return Err("This channel is not associated with a user for modmail purposes".into());
+    }
+
+    storage.remove_user_channel(msg.channel_id.as_u64());
+
+    msg.channel_id.delete(&ctx).await?;
+
+    Ok(())
+}
