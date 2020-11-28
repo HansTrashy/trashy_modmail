@@ -17,6 +17,18 @@ tracing-futures = "0.2"
 tokio = { version = "0.2", features = ["full"] }
 
 [dependencies.serenity]
+version = "0.9.0"
 default-features = false
-features = ["builder", "cache", "client", "framework", "gateway", "http", "model", "standard_framework", "utils", "rustls_backend"]
-serenity = "0.9"
+features = [
+    "builder",
+    "cache",
+    "collector",
+    "client",
+    "framework",
+    "gateway",
+    "http",
+    "model",
+    "standard_framework",
+    "utils",
+    "rustls_backend",
+]
