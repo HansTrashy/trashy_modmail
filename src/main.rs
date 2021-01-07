@@ -5,14 +5,13 @@ mod storage;
 use commands::*;
 use dotenv::dotenv;
 use lazy_static::lazy_static;
-use serenity::prelude::*;
 use serenity::{
     async_trait,
     client::bridge::gateway::{ShardId, ShardManager},
     framework::standard::{
         help_commands,
         macros::{check, command, group, help, hook},
-        Args, CheckResult, CommandGroup, CommandOptions, CommandResult, DispatchError, HelpOptions,
+        Args, CommandGroup, CommandOptions, CommandResult, DispatchError, HelpOptions,
         StandardFramework,
     },
     http::Http,
@@ -24,6 +23,7 @@ use serenity::{
     },
     utils::{content_safe, ContentSafeOptions},
 };
+use serenity::{client::ClientBuilder, prelude::*};
 use std::{collections::HashSet, env, sync::Arc};
 use storage::Storage;
 use tokio::sync::Mutex;
@@ -98,7 +98,7 @@ async fn main() {
         })
         .group(&GENERAL_GROUP);
 
-    let mut client = Client::new(&token)
+    let mut client = ClientBuilder::new(&token)
         .event_handler(handler::Handler)
         .framework(framework)
         .await
