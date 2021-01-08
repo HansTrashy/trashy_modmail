@@ -33,10 +33,12 @@ impl EventHandler for Handler {
         let mut storage = match data.get::<Storage>() {
             Some(v) => v.lock().await,
             None => {
-                let _ = msg.reply(
-                    &ctx,
-                    "Could not retrieve the needed Storage, please inform Staff",
-                );
+                let _ = msg
+                    .reply(
+                        &ctx,
+                        "Could not retrieve the needed Storage, please inform Staff",
+                    )
+                    .await;
                 return;
             }
         };
@@ -71,10 +73,14 @@ impl EventHandler for Handler {
 
                 match result {
                     Ok(_) => {
-                        let _ = msg.react(&ctx, ReactionType::Unicode("✅".to_string()));
+                        let _ = msg
+                            .react(&ctx, ReactionType::Unicode("✅".to_string()))
+                            .await;
                     }
                     Err(e) => {
-                        let _ = msg.react(&ctx, ReactionType::Unicode("❎".to_string()));
+                        let _ = msg
+                            .react(&ctx, ReactionType::Unicode("❎".to_string()))
+                            .await;
                     }
                 }
             }
@@ -91,16 +97,18 @@ impl EventHandler for Handler {
 
                 storage.insert_user_channel(*msg.author.id.as_u64(), *modmail_channel.id.as_u64());
 
-                let _ = modmail_channel.send_message(&ctx, |m| {
-                    m.content(
-                        MessageBuilder::new()
-                            .mention(&*MOD_ROLE)
-                            .push(" ")
-                            .mention(&msg.author)
-                            .push(" has started a modmail session!")
-                            .build(),
-                    )
-                });
+                let _ = modmail_channel
+                    .send_message(&ctx, |m| {
+                        m.content(
+                            MessageBuilder::new()
+                                .mention(&*MOD_ROLE)
+                                .push(" ")
+                                .mention(&msg.author)
+                                .push(" has started a modmail session!")
+                                .build(),
+                        )
+                    })
+                    .await;
 
                 let image = msg
                     .attachments
@@ -127,10 +135,14 @@ impl EventHandler for Handler {
 
                 match result {
                     Ok(_) => {
-                        let _ = msg.react(&ctx, ReactionType::Unicode("✅".to_string()));
+                        let _ = msg
+                            .react(&ctx, ReactionType::Unicode("✅".to_string()))
+                            .await;
                     }
                     Err(e) => {
-                        let _ = msg.react(&ctx, ReactionType::Unicode("❎".to_string()));
+                        let _ = msg
+                            .react(&ctx, ReactionType::Unicode("❎".to_string()))
+                            .await;
                     }
                 }
             }

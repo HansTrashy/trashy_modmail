@@ -12,11 +12,12 @@ pub async fn init(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     let mut storage = match data.get::<Storage>() {
         Some(v) => v.lock().await,
         None => {
-            msg.reply(
-                &ctx,
-                "Could not retrieve the needed Storage, please inform Staff",
-            )
-            .await;
+            let _ = msg
+                .reply(
+                    &ctx,
+                    "Could not retrieve the needed Storage, please inform Staff",
+                )
+                .await;
             return Err("could not retrieve storage".into());
         }
     };
@@ -41,7 +42,7 @@ pub async fn init(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
 
     storage.insert_user_channel(*user.id.as_u64(), *modmail_channel.id.as_u64());
 
-    modmail_channel
+    let _ = modmail_channel
         .send_message(&ctx, |m| {
             m.content(
                 MessageBuilder::new()
