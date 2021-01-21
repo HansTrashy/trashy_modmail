@@ -4,6 +4,7 @@ use serenity::framework::standard::{macros::command, Args, CommandResult};
 use serenity::model::prelude::*;
 use serenity::prelude::*;
 use serenity::utils::MessageBuilder;
+use tracing::debug;
 
 #[command]
 #[description = "Creates a modmail channel with the mentioned user"]
@@ -101,11 +102,13 @@ pub async fn reply(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 
     match result {
         Ok(_) => {
+            debug!("sent message successfully to modmail channel");
             msg.react(&ctx, ReactionType::Unicode("✅".to_string()))
                 .await?;
         }
         Err(e) => {
-            msg.react(&ctx, ReactionType::Unicode("❎".to_string()))
+            debug!(?e, "failed to send message to modmail channel");
+            msg.react(&ctx, ReactionType::Unicode("❌".to_string()))
                 .await?;
         }
     }

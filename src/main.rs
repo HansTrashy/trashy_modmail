@@ -27,7 +27,7 @@ use serenity::{client::ClientBuilder, prelude::*};
 use std::{collections::HashSet, env, sync::Arc};
 use storage::Storage;
 use tokio::sync::Mutex;
-use tracing::*;
+use tracing::{debug, error};
 
 fn load_env(name: &str) -> u64 {
     env::var(name)
@@ -57,6 +57,11 @@ impl TypeMapKey for Storage {
 #[group]
 #[commands(init, reply, close, silentclose)]
 struct General;
+
+#[hook]
+async fn dispatch_error(_ctx: &Context, _msg: &Message, error: DispatchError) {
+    debug!(?error, "Dispatch failed");
+}
 
 #[tokio::main]
 async fn main() {
@@ -96,6 +101,7 @@ async fn main() {
                 // are owners only.
                 .owners(owners)
         })
+        .on_dispatch_error(dispatch_error)
         .group(&GENERAL_GROUP);
 
     let mut client = ClientBuilder::new(&token)

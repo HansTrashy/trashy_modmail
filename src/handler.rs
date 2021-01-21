@@ -73,13 +73,15 @@ impl EventHandler for Handler {
 
                 match result {
                     Ok(_) => {
+                        debug!("sent message successfully to modmail channel");
                         let _ = msg
                             .react(&ctx, ReactionType::Unicode("✅".to_string()))
                             .await;
                     }
                     Err(e) => {
+                        debug!(?e, "failed to send message to modmail channel");
                         let _ = msg
-                            .react(&ctx, ReactionType::Unicode("❎".to_string()))
+                            .react(&ctx, ReactionType::Unicode("❌".to_string()))
                             .await;
                     }
                 }
@@ -97,7 +99,7 @@ impl EventHandler for Handler {
 
                 storage.insert_user_channel(*msg.author.id.as_u64(), *modmail_channel.id.as_u64());
 
-                let _ = modmail_channel
+                let r = modmail_channel
                     .send_message(&ctx, |m| {
                         m.content(
                             MessageBuilder::new()
@@ -109,6 +111,7 @@ impl EventHandler for Handler {
                         )
                     })
                     .await;
+                tracing::debug!(?r, "opened modmail session");
 
                 let image = msg
                     .attachments
@@ -135,13 +138,15 @@ impl EventHandler for Handler {
 
                 match result {
                     Ok(_) => {
+                        debug!("sent message successfully to modmail channel");
                         let _ = msg
                             .react(&ctx, ReactionType::Unicode("✅".to_string()))
                             .await;
                     }
                     Err(e) => {
+                        debug!(?e, "failed to send message to modmail channel");
                         let _ = msg
-                            .react(&ctx, ReactionType::Unicode("❎".to_string()))
+                            .react(&ctx, ReactionType::Unicode("❌".to_string()))
                             .await;
                     }
                 }
