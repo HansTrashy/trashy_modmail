@@ -66,7 +66,9 @@ async fn dispatch_error(_ctx: &Context, _msg: &Message, error: DispatchError) {
 #[tokio::main]
 async fn main() {
     dotenv().ok();
-    tracing_subscriber::fmt().with_env_filter("info").init();
+    tracing_subscriber::fmt()
+        .with_env_filter("debug,hyper=info")
+        .init();
 
     let token = env::var("DISCORD_TOKEN").expect("No DISCORD_TOKEN found in environment");
 
