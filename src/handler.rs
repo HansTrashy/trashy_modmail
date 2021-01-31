@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use super::{MODMAIL_CATEGORY, MODMAIL_SERVER, MOD_ROLE, SELF_ID};
 use crate::storage::Storage;
 use serenity::{
@@ -11,6 +13,7 @@ use serenity::{
     prelude::*,
     utils::MessageBuilder,
 };
+use tokio::time::sleep;
 use tracing::*;
 
 pub struct Handler;
@@ -99,6 +102,8 @@ impl EventHandler for Handler {
 
                 storage.insert_user_channel(*msg.author.id.as_u64(), *modmail_channel.id.as_u64());
 
+                //TODO: this does not work sometimes. because discord is slower than in the past, workaround for now is waitig a couple seconds
+                let _ = sleep(Duration::from_secs(10)).await;
                 let r = modmail_channel
                     .send_message(&ctx, |m| {
                         m.content(
