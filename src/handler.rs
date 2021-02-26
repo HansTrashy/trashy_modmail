@@ -75,11 +75,13 @@ impl EventHandler for Handler {
                     .await;
 
                 match result {
-                    Ok(_) => {
+                    Ok(bot_msg) => {
                         debug!("sent message successfully to modmail channel");
                         let _ = msg
                             .react(&ctx, ReactionType::Unicode("✅".to_string()))
                             .await;
+
+                        let _ = bot_msg.pin(&ctx).await;
                     }
                     Err(e) => {
                         debug!(?e, "failed to send message to modmail channel");
@@ -142,11 +144,13 @@ impl EventHandler for Handler {
                     .await;
 
                 match result {
-                    Ok(_) => {
+                    Ok(bot_msg) => {
                         debug!("sent message successfully to modmail channel");
                         let _ = msg
                             .react(&ctx, ReactionType::Unicode("✅".to_string()))
                             .await;
+
+                        let _ = bot_msg.pin(&ctx).await;
                     }
                     Err(e) => {
                         debug!(?e, "failed to send message to modmail channel");

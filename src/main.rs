@@ -6,22 +6,16 @@ use commands::*;
 use dotenv::dotenv;
 use lazy_static::lazy_static;
 use serenity::{
-    async_trait,
-    client::bridge::gateway::{ShardId, ShardManager},
+    client::bridge::gateway::ShardManager,
     framework::standard::{
-        help_commands,
-        macros::{check, command, group, help, hook},
-        Args, CommandGroup, CommandOptions, CommandResult, DispatchError, HelpOptions,
-        StandardFramework,
+        macros::{group, hook},
+        DispatchError, StandardFramework,
     },
     http::Http,
     model::{
-        channel::{Channel, Message},
-        gateway::Ready,
+        channel::Message,
         id::{ChannelId, GuildId, RoleId, UserId},
-        permissions::Permissions,
     },
-    utils::{content_safe, ContentSafeOptions},
 };
 use serenity::{client::ClientBuilder, prelude::*};
 use std::{collections::HashSet, env, sync::Arc};
